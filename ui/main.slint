@@ -1,0 +1,69 @@
+import { Button, VerticalBox , HorizontalBox, ListView, CheckBox} from "std-widgets.slint";
+
+export component ExiledMainWindow {
+    in property<image> item_left_header: @image-url("../assets/itemsheadercurrencyleft.png");
+    in property<image> item_middle_header: @image-url("../assets/itemsheadercurrencymiddle.png");
+    in property<image> item_right_header: @image-url("../assets/itemsheadercurrencyright.png");
+
+    HorizontalBox {
+        VerticalBox {
+            alignment: start;
+            // Show the item name in the header
+            HorizontalLayout {
+                alignment: stretch;
+                Image {
+                    horizontal-stretch: 0;
+                    source: item_left_header;
+                }
+                Image {
+                    horizontal-stretch: 1;
+                    image-fit: fill;
+                    horizontal-tiling: round;
+                    height: 7rem;
+                    source: item_middle_header;
+                    Text {
+                        text: "Item Name";
+                        font-size: 2rem;
+                        horizontal-alignment: center;
+                    }
+                }
+                Image {
+                    horizontal-stretch: 0;
+                    source: item_right_header;
+                }
+            }
+            ListView {
+                for mods in [{ name: "Armour: +7% to chaos resistance" }] :
+                rect := Rectangle {
+                    CheckBox {
+                        text: mods.name;
+                    }
+                    ta := TouchArea {}
+                    states [
+                        hover when ta.has-hover: {
+                            rect.background: green;
+                            in {
+                                animate * { duration: 2000ms; }
+                            }
+                            out {
+                                animate * { duration: 2000ms; }
+                            }
+                        }
+                    ]
+                }
+            }
+            HorizontalLayout {
+                alignment: center;
+                Button { text: "OK"; }
+            }
+        }
+        VerticalBox {
+            alignment: start;
+            Text {
+                text: "Standard";
+                font-size: 2rem;
+                horizontal-alignment: left;
+            }
+        }
+    }
+}
