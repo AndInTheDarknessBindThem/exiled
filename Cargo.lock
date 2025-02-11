@@ -1337,6 +1337,8 @@ dependencies = [
  "global-hotkey",
  "image 0.25.5",
  "piccolo",
+ "regex",
+ "serde",
  "slint",
  "slint-build",
 ]

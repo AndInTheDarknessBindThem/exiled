@@ -8,6 +8,8 @@ global-hotkey = "0.6.3"
 image = "0.25.5"
 piccolo = "0.3.3"
 slint = "1.9.2"
+regex = "1.11"
+serde = { version = "1.0", features = ["derive"] }
 
 [build-dependencies]
 slint-build = "1.9.2"
