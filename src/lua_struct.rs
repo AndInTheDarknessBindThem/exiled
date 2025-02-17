@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use piccolo::{FromMultiValue, Table, Value};
+use piccolo::{FromMultiValue, Lua, Table, Value};
 
 #[derive(Debug)]
 pub enum LuaValue {
@@ -9,6 +9,7 @@ pub enum LuaValue {
     Integer(i64),
     List(Vec<LuaValue>),
     Table(Box<LuaStruct>),
+    Boolean(bool),
 }
 
 impl LuaValue {
@@ -27,30 +28,33 @@ pub struct LuaStruct {
     pub list: Vec<LuaValue>,
 }
 
-fn convert_table(table: Table<'_>) -> LuaStruct {
-    let mut lua_struct = LuaStruct {
-        data: Default::default(),
-        list: Default::default(),
-    };
-    for (k, v) in table.iter() {
-        let v = match v {
-            Value::Integer(_) => LuaValue::Integer(v.to_integer().unwrap_or(0)),
-            Value::Number(_) => LuaValue::Number(v.to_number().unwrap_or(0 as f64)),
-            Value::String(_) => LuaValue::String(v.to_string()),
-            Value::Table(table) => LuaValue::Table(Box::new(convert_table(table))),
-            _ => todo!(),
+impl From<Table<'_>> for LuaStruct {
+    fn from(value: Table<'_>) -> Self {
+        let mut lua_struct = LuaStruct {
+            data: Default::default(),
+            list: Default::default(),
         };
-        
-        match k {
-            Value::Integer(_) => {
-                lua_struct.list.push(v);
-                None
-            },
-            Value::String(k) => lua_struct.data.insert(k.to_string(), v),
-            _ => todo!(),
-        };
+        for (k, v) in value.iter() {
+            let v = match v {
+                Value::Integer(_) => LuaValue::Integer(v.to_integer().unwrap_or(0)),
+                Value::Number(_) => LuaValue::Number(v.to_number().unwrap_or(0 as f64)),
+                Value::String(_) => LuaValue::String(v.to_string()),
+                Value::Table(table) => LuaValue::Table(Box::new(table.into())),
+                Value::Boolean(_) => LuaValue::Boolean(v.to_bool()),
+                _ => todo!(),
+            };
+
+            match k {
+                Value::Integer(_) => {
+                    lua_struct.list.push(v);
+                    None
+                },
+                Value::String(k) => lua_struct.data.insert(k.to_string(), v),
+                _ => todo!(),
+            };
+        }
+        lua_struct
     }
-    lua_struct
 }
 
 impl<'gc> FromMultiValue<'gc> for LuaStruct {
@@ -59,7 +63,7 @@ impl<'gc> FromMultiValue<'gc> for LuaStruct {
         values: impl Iterator<Item = Value<'gc>>,
     ) -> Result<Self, piccolo::TypeError> {
         let table = Table::from_multi_value(ctx, values)?;
-        Ok(convert_table(table))
+        Ok(table.into())
     }
 }
 

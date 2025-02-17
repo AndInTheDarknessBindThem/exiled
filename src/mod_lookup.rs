@@ -32,11 +32,12 @@ impl ModStore {
     }
 
     pub fn insert(&mut self, pob_name: &String, data: &LuaStruct) {
+        let value_template_re = Regex::new(r"-?\((?<min>-?\d+(\.\d+)?)-(?<max>-?\d+(\.\d+)?)\)|(\d+)").unwrap();
+        
         for value in data.list.iter() {
             if let LuaValue::String(affix) = value {
-                let re = Regex::new(r"-?\((?<min>-?\d+(\.\d+)?)-(?<max>-?\d+(\.\d+)?)\)|(\d+)").unwrap();
 
-                let stripped_affix = re.replace_all(&affix, "#").into_owned();
+                let stripped_affix = value_template_re.replace_all(&affix, "#").into_owned();
                 let pob_name_re = Regex::new(r"(?<name>.+)(?<tier>\d+)$").unwrap();
 
                 let captures = pob_name_re.captures(pob_name);
@@ -68,7 +69,7 @@ impl ModStore {
                         .unwrap_or_default(),
                 };
 
-                re.captures_iter(&affix)
+                value_template_re.captures_iter(&affix)
                     .map(|cap| {
                         if let (Some(min), Some(max)) = (cap.name("min"), cap.name("max")) {
                             let min = min.as_str().parse::<f64>().unwrap_or(0.0);
